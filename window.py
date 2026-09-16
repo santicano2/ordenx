@@ -136,11 +136,15 @@ class MainWindow(QMainWindow):
         if not folder:
             self.status_label.setText("Selecciona una carpeta antes de analizar")
             return
+        source_dir = Path(folder)
+        if not source_dir.is_dir():
+            self.status_label.setText("La carpeta seleccionada ya no existe")
+            return
         if not self.rules:
             self.status_label.setText("Agrega al menos una regla antes de analizar")
             return
 
-        self.previews = preview_moves(Path(folder), self.rules)
+        self.previews = preview_moves(source_dir, self.rules)
         self.preview_list.clear()
         for preview in self.previews:
             destination = str(preview.destination) if preview.destination else "Se queda en Descargas"
