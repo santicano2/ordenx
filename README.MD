@@ -7,7 +7,7 @@ Organizador de archivos para la carpeta Descargas, pensado para funcionar en Win
 - Python 3.11 o superior.
 - PySide6 para la interfaz de escritorio.
 - `pathlib` y `shutil` para trabajar con archivos.
-- JSON para guardar las reglas en `~/.ordenx/rules.json`.
+- JSON para guardar las reglas en `~/.ordenx/rules.json` y la carpeta elegida en `~/.ordenx/settings.json`.
 
 ## Primera version
 
@@ -17,6 +17,11 @@ Organizador de archivos para la carpeta Descargas, pensado para funcionar en Win
 - Vista previa de los movimientos antes de aplicarlos.
 - El usuario puede elegir la carpeta de origen y revisar los archivos detectados.
 - Los archivos sin una regla permanecen en la carpeta Descargas.
+
+En la primera ejecución se cargan reglas recomendadas separadas para PDFs, Words,
+Excels, textos, imagenes, videos, musica y archivos comprimidos. Los combos de categoria
+y destino permiten elegir valores frecuentes o escribir reglas personalizadas. Las reglas
+y la carpeta seleccionada se recuperan automaticamente en cada apertura.
 
 ## Como ejecutar
 

@@ -7,8 +7,13 @@ from organizer import (
     Rule,
     apply_moves,
     load_rules,
+    load_source_folder,
+    legacy_recommended_rules,
     preview_moves,
+    recommended_rules,
     save_rules,
+    save_source_folder,
+    with_recommended_rules,
 )
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -19,9 +24,23 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QComboBox,
     QVBoxLayout,
     QWidget,
 )
+
+
+CATEGORY_EXTENSIONS = {
+    "PDFs": "pdf",
+    "Words": "doc, docx, odt, rtf",
+    "Excels": "xls, xlsx, ods, csv",
+    "Textos": "txt, md, log",
+    "Imagenes": "jpg, jpeg, png, gif, webp, svg",
+    "Videos": "mp4, mov, avi, mkv",
+    "Musica": "mp3, wav, flac, m4a",
+    "Comprimidos": "zip, rar, 7z, tar, gz",
+    "Planillas": "xlsx, csv, ods",
+}
 
 
 class MainWindow(QMainWindow):
@@ -30,12 +49,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("OrdenX")
         self.resize(760, 520)
         self.rules_path = rules_path or Path.home() / ".ordenx" / "rules.json"
-        self.rules: list[Rule] = load_rules(self.rules_path)
+        self.settings_path = self.rules_path.with_name("settings.json")
+        loaded_rules = load_rules(self.rules_path)
+        if loaded_rules == legacy_recommended_rules():
+            loaded_rules = recommended_rules()
+        self.rules: list[Rule] = with_recommended_rules(loaded_rules)
+        if self.rules != loaded_rules:
+            save_rules(self.rules_path, self.rules)
         self.previews: list[MovePreview] = []
 
         self.folder_input = QLineEdit()
         self.folder_input.setPlaceholderText("Selecciona la carpeta Descargas")
         self.folder_input.setReadOnly(True)
+        saved_folder = load_source_folder(self.settings_path)
+        if saved_folder is not None:
+            self.folder_input.setText(str(saved_folder))
 
         select_button = QPushButton("Elegir carpeta")
         select_button.clicked.connect(self.select_folder)
@@ -44,10 +72,29 @@ class MainWindow(QMainWindow):
 
         self.status_label = QLabel("Aún no seleccionaste una carpeta")
 
-        self.extension_input = QLineEdit()
-        self.extension_input.setPlaceholderText("Ej: pdf")
-        self.destination_input = QLineEdit()
-        self.destination_input.setPlaceholderText("Ej: Documentos/PDF")
+        self.extension_input = QComboBox()
+        self.extension_input.setEditable(True)
+        self.extension_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.extension_input.addItems(list(CATEGORY_EXTENSIONS))
+        self.extension_input.setCurrentText("")
+        self.extension_input.lineEdit().setPlaceholderText("Categoria o extensiones personalizadas")
+        self.destination_input = QComboBox()
+        self.destination_input.setEditable(True)
+        self.destination_input.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.destination_input.addItems(
+            [
+                "Documentos",
+                "Documentos/PDF",
+                "Documentos/Planillas",
+                "Imagenes",
+                "Videos",
+                "Musica",
+                "Comprimidos",
+                "Programas",
+            ]
+        )
+        self.destination_input.setCurrentText("")
+        self.destination_input.lineEdit().setPlaceholderText("Ej: Documentos/PDF")
         add_rule_button = QPushButton("Agregar regla")
         add_rule_button.clicked.connect(self.add_rule)
         remove_rule_button = QPushButton("Eliminar seleccionada")
@@ -89,18 +136,20 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Elegir carpeta")
         if folder:
             self.folder_input.setText(folder)
+            save_source_folder(self.settings_path, Path(folder))
             self.status_label.setText("Carpeta seleccionada correctamente")
 
     def add_rule(self) -> None:
-        extension = self.extension_input.text().strip()
-        destination = self.destination_input.text().strip()
+        extension = self.extension_input.currentText().strip()
+        destination = self.destination_input.currentText().strip()
         if not extension or not destination:
             self.status_label.setText("Completa la extension y la carpeta destino")
             return
 
+        extension = CATEGORY_EXTENSIONS.get(extension, extension)
         rule = Rule(extension, destination)
         if any(
-            existing.normalized_extension() == rule.normalized_extension()
+            set(existing.normalized_extensions()) & set(rule.normalized_extensions())
             for existing in self.rules
         ):
             self.status_label.setText("Ya existe una regla para esa extension")
@@ -109,15 +158,23 @@ class MainWindow(QMainWindow):
         self.rules.append(rule)
         save_rules(self.rules_path, self.rules)
         self.refresh_rules_list()
-        self.extension_input.clear()
-        self.destination_input.clear()
+        self.extension_input.setCurrentText("")
+        self.destination_input.setCurrentText("")
         self.status_label.setText("Regla agregada")
 
     def refresh_rules_list(self) -> None:
         self.rules_list.clear()
         for rule in self.rules:
+            category = next(
+                (
+                    name
+                    for name, extensions in CATEGORY_EXTENSIONS.items()
+                    if extensions == rule.extension
+                ),
+                rule.extension,
+            )
             self.rules_list.addItem(
-                f"{rule.normalized_extension()}  ->  {rule.destination}"
+                f"{category}  ->  {rule.destination}"
             )
 
     def remove_selected_rule(self) -> None:
