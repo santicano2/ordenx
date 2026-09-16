@@ -99,6 +99,13 @@ class MainWindow(QMainWindow):
             return
 
         rule = Rule(extension, destination)
+        if any(
+            existing.normalized_extension() == rule.normalized_extension()
+            for existing in self.rules
+        ):
+            self.status_label.setText("Ya existe una regla para esa extension")
+            return
+
         self.rules.append(rule)
         save_rules(self.rules_path, self.rules)
         self.refresh_rules_list()
