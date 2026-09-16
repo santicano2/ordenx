@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ordenx"
+version = "0.1.0"
+description = "Organizador manual de archivos por extension"
+requires-python = ">=3.11"
