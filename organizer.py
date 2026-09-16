@@ -38,11 +38,13 @@ def recommended_rules() -> list[Rule]:
         Rule("pdf", "Documentos/PDF"),
         Rule("doc, docx, odt, rtf", "Documentos/Word"),
         Rule("xls, xlsx, ods, csv", "Documentos/Excel"),
+        Rule("ppt, pptx, odp, key", "Documentos/Presentaciones"),
         Rule("txt, md, log", "Documentos/Texto"),
         Rule("jpg, jpeg, png, gif, webp, svg", "Imagenes"),
         Rule("mp4, mov, avi, mkv", "Videos"),
         Rule("mp3, wav, flac, m4a", "Musica"),
         Rule("zip, rar, 7z, tar, gz", "Comprimidos"),
+        Rule("exe, msi, bat, cmd, sh, appimage, dmg, pkg", "Programas"),
     ]
 
 

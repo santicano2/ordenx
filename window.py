@@ -34,12 +34,13 @@ CATEGORY_EXTENSIONS = {
     "PDFs": "pdf",
     "Words": "doc, docx, odt, rtf",
     "Excels": "xls, xlsx, ods, csv",
+    "Presentaciones": "ppt, pptx, odp, key",
     "Textos": "txt, md, log",
     "Imagenes": "jpg, jpeg, png, gif, webp, svg",
     "Videos": "mp4, mov, avi, mkv",
     "Musica": "mp3, wav, flac, m4a",
     "Comprimidos": "zip, rar, 7z, tar, gz",
-    "Planillas": "xlsx, csv, ods",
+    "Ejecutables": "exe, msi, bat, cmd, sh, appimage, dmg, pkg",
 }
 
 

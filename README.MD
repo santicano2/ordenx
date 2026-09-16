@@ -19,9 +19,10 @@ Organizador de archivos para la carpeta Descargas, pensado para funcionar en Win
 - Los archivos sin una regla permanecen en la carpeta Descargas.
 
 En la primera ejecución se cargan reglas recomendadas separadas para PDFs, Words,
-Excels, textos, imagenes, videos, musica y archivos comprimidos. Los combos de categoria
-y destino permiten elegir valores frecuentes o escribir reglas personalizadas. Las reglas
-y la carpeta seleccionada se recuperan automaticamente en cada apertura.
+Excels, presentaciones, textos, imagenes, videos, musica, comprimidos y ejecutables.
+Los combos de categoria y destino permiten elegir valores frecuentes o escribir reglas
+personalizadas. Las reglas y la carpeta seleccionada se recuperan automaticamente en
+cada apertura.
 
 ## Como ejecutar
 
