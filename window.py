@@ -2,7 +2,14 @@
 
 from pathlib import Path
 
-from organizer import MovePreview, Rule, apply_moves, preview_moves
+from organizer import (
+    MovePreview,
+    Rule,
+    apply_moves,
+    load_rules,
+    preview_moves,
+    save_rules,
+)
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -18,11 +25,12 @@ from PySide6.QtWidgets import (
 
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, rules_path: Path | None = None) -> None:
         super().__init__()
         self.setWindowTitle("OrdenX")
         self.resize(760, 520)
-        self.rules: list[Rule] = []
+        self.rules_path = rules_path or Path.home() / ".ordenx" / "rules.json"
+        self.rules: list[Rule] = load_rules(self.rules_path)
         self.previews: list[MovePreview] = []
 
         self.folder_input = QLineEdit()
@@ -43,6 +51,7 @@ class MainWindow(QMainWindow):
         add_rule_button = QPushButton("Agregar regla")
         add_rule_button.clicked.connect(self.add_rule)
         self.rules_list = QListWidget()
+        self.refresh_rules_list()
 
         rule_row = QHBoxLayout()
         rule_row.addWidget(self.extension_input)
@@ -88,10 +97,18 @@ class MainWindow(QMainWindow):
 
         rule = Rule(extension, destination)
         self.rules.append(rule)
-        self.rules_list.addItem(f"{rule.normalized_extension()}  ->  {rule.destination}")
+        save_rules(self.rules_path, self.rules)
+        self.refresh_rules_list()
         self.extension_input.clear()
         self.destination_input.clear()
         self.status_label.setText("Regla agregada")
+
+    def refresh_rules_list(self) -> None:
+        self.rules_list.clear()
+        for rule in self.rules:
+            self.rules_list.addItem(
+                f"{rule.normalized_extension()}  ->  {rule.destination}"
+            )
 
     def analyze_folder(self) -> None:
         folder = self.folder_input.text().strip()

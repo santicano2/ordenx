@@ -1,5 +1,6 @@
 """Logica de organizacion de archivos por extension."""
 
+import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,23 @@ class MovePreview:
     source: Path
     destination: Path | None
     status: str
+
+
+def load_rules(path: Path) -> list[Rule]:
+    if not path.exists():
+        return []
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return [Rule(str(item["extension"]), str(item["destination"])) for item in data]
+
+
+def save_rules(path: Path, rules: list[Rule]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = [
+        {"extension": rule.extension, "destination": rule.destination}
+        for rule in rules
+    ]
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 def preview_moves(source_dir: Path, rules: list[Rule]) -> list[MovePreview]:
