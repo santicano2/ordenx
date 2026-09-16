@@ -50,6 +50,8 @@ class MainWindow(QMainWindow):
         self.destination_input.setPlaceholderText("Ej: Documentos/PDF")
         add_rule_button = QPushButton("Agregar regla")
         add_rule_button.clicked.connect(self.add_rule)
+        remove_rule_button = QPushButton("Eliminar seleccionada")
+        remove_rule_button.clicked.connect(self.remove_selected_rule)
         self.rules_list = QListWidget()
         self.refresh_rules_list()
 
@@ -57,6 +59,7 @@ class MainWindow(QMainWindow):
         rule_row.addWidget(self.extension_input)
         rule_row.addWidget(self.destination_input)
         rule_row.addWidget(add_rule_button)
+        rule_row.addWidget(remove_rule_button)
 
         folder_row = QHBoxLayout()
         folder_row.addWidget(self.folder_input)
@@ -109,6 +112,17 @@ class MainWindow(QMainWindow):
             self.rules_list.addItem(
                 f"{rule.normalized_extension()}  ->  {rule.destination}"
             )
+
+    def remove_selected_rule(self) -> None:
+        selected_row = self.rules_list.currentRow()
+        if selected_row < 0:
+            self.status_label.setText("Selecciona una regla para eliminarla")
+            return
+
+        self.rules.pop(selected_row)
+        save_rules(self.rules_path, self.rules)
+        self.refresh_rules_list()
+        self.status_label.setText("Regla eliminada")
 
     def analyze_folder(self) -> None:
         folder = self.folder_input.text().strip()
