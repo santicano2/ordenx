@@ -1,5 +1,6 @@
 """Logica inicial de OrdenX para organizar archivos por extension."""
 
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -41,6 +42,22 @@ def preview_moves(source_dir: Path, rules: list[Rule]) -> list[MovePreview]:
 		previews.append(MovePreview(source, destination, status))
 
 	return previews
+
+
+def apply_moves(previews: list[MovePreview]) -> int:
+	moved_count = 0
+
+	for preview in previews:
+		if preview.status != "listo" or preview.destination is None:
+			continue
+		if preview.destination.exists():
+			continue
+
+		preview.destination.parent.mkdir(parents=True, exist_ok=True)
+		shutil.move(str(preview.source), str(preview.destination))
+		moved_count += 1
+
+	return moved_count
 
 
 def main() -> None:
