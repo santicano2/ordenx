@@ -98,15 +98,19 @@ class MainWindow(QMainWindow):
         self.destination_input.lineEdit().setPlaceholderText("Ej: Documentos/PDF")
         add_rule_button = QPushButton("Agregar regla")
         add_rule_button.clicked.connect(self.add_rule)
+        edit_rule_button = QPushButton("Guardar edicion")
+        edit_rule_button.clicked.connect(self.edit_selected_rule)
         remove_rule_button = QPushButton("Eliminar seleccionada")
         remove_rule_button.clicked.connect(self.remove_selected_rule)
         self.rules_list = QListWidget()
+        self.rules_list.currentRowChanged.connect(self.load_selected_rule)
         self.refresh_rules_list()
 
         rule_row = QHBoxLayout()
         rule_row.addWidget(self.extension_input)
         rule_row.addWidget(self.destination_input)
         rule_row.addWidget(add_rule_button)
+        rule_row.addWidget(edit_rule_button)
         rule_row.addWidget(remove_rule_button)
 
         folder_row = QHBoxLayout()
@@ -188,6 +192,49 @@ class MainWindow(QMainWindow):
         save_rules(self.rules_path, self.rules)
         self.refresh_rules_list()
         self.status_label.setText("Regla eliminada")
+
+    def load_selected_rule(self, row: int) -> None:
+        if row < 0 or row >= len(self.rules):
+            return
+        rule = self.rules[row]
+        category = next(
+            (
+                name
+                for name, extensions in CATEGORY_EXTENSIONS.items()
+                if extensions == rule.extension
+            ),
+            rule.extension,
+        )
+        self.extension_input.setCurrentText(category)
+        self.destination_input.setCurrentText(rule.destination)
+
+    def edit_selected_rule(self) -> None:
+        selected_row = self.rules_list.currentRow()
+        if selected_row < 0:
+            self.status_label.setText("Selecciona una regla para editarla")
+            return
+
+        extension = self.extension_input.currentText().strip()
+        destination = self.destination_input.currentText().strip()
+        if not extension or not destination:
+            self.status_label.setText("Completa la extension y la carpeta destino")
+            return
+
+        extension = CATEGORY_EXTENSIONS.get(extension, extension)
+        edited_rule = Rule(extension, destination)
+        for index, existing in enumerate(self.rules):
+            if index != selected_row and (
+                set(existing.normalized_extensions())
+                & set(edited_rule.normalized_extensions())
+            ):
+                self.status_label.setText("Ya existe una regla para esa extension")
+                return
+
+        self.rules[selected_row] = edited_rule
+        save_rules(self.rules_path, self.rules)
+        self.refresh_rules_list()
+        self.rules_list.setCurrentRow(selected_row)
+        self.status_label.setText("Regla editada")
 
     def analyze_folder(self) -> None:
         folder = self.folder_input.text().strip()
