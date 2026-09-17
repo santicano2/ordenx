@@ -1,5 +1,7 @@
 """Ventana principal de OrdenX."""
 
+import json
+import re
 from pathlib import Path
 
 from organizer import (
@@ -44,6 +46,23 @@ CATEGORY_EXTENSIONS = {
 }
 
 
+def validate_rule(extension: str, destination: str) -> str | None:
+    extensions = [item.strip() for item in extension.split(",") if item.strip()]
+    if not extensions:
+        return "Agrega al menos una extension"
+    if any(not re.fullmatch(r"\.?[A-Za-z0-9][A-Za-z0-9_-]*", item) for item in extensions):
+        return "La extension solo puede contener letras, numeros, guion o guion bajo"
+
+    destination_path = Path(destination)
+    if not destination.strip():
+        return "Completa la carpeta destino"
+    if destination_path.is_absolute() or ".." in destination_path.parts:
+        return "El destino debe ser una subcarpeta dentro de Descargas"
+    if any(not part.strip() for part in destination_path.parts):
+        return "El destino contiene una carpeta vacia"
+    return None
+
+
 class MainWindow(QMainWindow):
     def __init__(self, rules_path: Path | None = None) -> None:
         super().__init__()
@@ -51,7 +70,10 @@ class MainWindow(QMainWindow):
         self.resize(760, 520)
         self.rules_path = rules_path or Path.home() / ".ordenx" / "rules.json"
         self.settings_path = self.rules_path.with_name("settings.json")
-        loaded_rules = load_rules(self.rules_path)
+        try:
+            loaded_rules = load_rules(self.rules_path)
+        except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+            loaded_rules = []
         if loaded_rules == legacy_recommended_rules():
             loaded_rules = recommended_rules()
         self.rules: list[Rule] = with_recommended_rules(loaded_rules)
@@ -147,8 +169,9 @@ class MainWindow(QMainWindow):
     def add_rule(self) -> None:
         extension = self.extension_input.currentText().strip()
         destination = self.destination_input.currentText().strip()
-        if not extension or not destination:
-            self.status_label.setText("Completa la extension y la carpeta destino")
+        error = validate_rule(extension, destination)
+        if error:
+            self.status_label.setText(error)
             return
 
         extension = CATEGORY_EXTENSIONS.get(extension, extension)
@@ -216,8 +239,9 @@ class MainWindow(QMainWindow):
 
         extension = self.extension_input.currentText().strip()
         destination = self.destination_input.currentText().strip()
-        if not extension or not destination:
-            self.status_label.setText("Completa la extension y la carpeta destino")
+        error = validate_rule(extension, destination)
+        if error:
+            self.status_label.setText(error)
             return
 
         extension = CATEGORY_EXTENSIONS.get(extension, extension)

@@ -88,6 +88,8 @@ def load_rules(path: Path) -> list[Rule]:
         return []
 
     data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError("El archivo de reglas debe contener una lista")
     return [Rule(str(item["extension"]), str(item["destination"])) for item in data]
 
 
